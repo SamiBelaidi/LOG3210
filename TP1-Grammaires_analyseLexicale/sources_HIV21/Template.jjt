@@ -114,8 +114,10 @@ TOKEN :
 	< SEMICOLON: ";" > |
 	< COMMA: "," > |
 	< #AND: "&&" > |
-	< #OR: "||" >
+	< #OR: "||" > |
 	// À compléter au besoin
+	< LPAR : "(" > |
+	< RPAR : ")" >
 }
 
 
@@ -126,8 +128,9 @@ TOKEN :
 	< #LETTER: ["a"-"z","A"-"Z","_"] > |
 	< #DIGIT: ["0"-"9"] > |
 	< INTEGER: ["1"-"9"] (["0"-"9"])* | "0" > |
+	< EXP : "e" | "E">|
 	// // Caution! Allows numbers such as "0000.23"
-	< REAL: (<INTEGER>) "." (<INTEGER>)> //TODO
+	< REAL: (<MINUS>)? (<INTEGER>)? "." (<DIGIT>)* (<EXP> <INTEGER>)? >
 
 }
 
@@ -148,7 +151,7 @@ ASTProgram Program() : { }
 
 void Block() : { }
 {
-	 ( Stmt() )*
+	(Stmt() | IfStmt())*
 }
 
 
@@ -174,7 +177,28 @@ void BasicExpr() : {}
 	IntValue()
 }
 
+void BasicBoolExp(): {}
+{
+    Expr() (<COMPARE> Expr())?
+}
 
+void BoolExp() :{}
+{
+    BasicBoolExp() ((<LOGIC>) BasicBoolExp())*
+}
+
+
+void IfStmt() : {}
+{
+     <IF> <LPAR> <INTEGER> <RPAR>
+            BlockWithAcc()
+            (<ELSE> (IfStmt() | BlockWithAcc()))?
+}
+
+void BlockWithAcc(): {}
+{
+    ((<LACC> (Block()) <RACC>) | (Stmt()))
+}
 
 void Identifier() : { Token t;}
 {
