@@ -1,0 +1,8 @@
+// Error test class declaration
+// statement in class declaration
+
+class Example {
+    if (a > b) {
+        a = a + 1;
+    }
+}

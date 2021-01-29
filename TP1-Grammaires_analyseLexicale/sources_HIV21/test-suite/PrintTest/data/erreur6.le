@@ -1,0 +1,6 @@
+// Error test for class declaration
+// statement in class declaration
+
+class Example {
+    a = b + c;
+}

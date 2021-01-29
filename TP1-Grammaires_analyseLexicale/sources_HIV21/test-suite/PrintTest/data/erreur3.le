@@ -1,0 +1,8 @@
+// Error test for if statement
+// missing "{ }"
+
+if (i == 0)
+    a = 1;
+    b = 2;
+else
+    c = 3;

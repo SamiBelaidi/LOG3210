@@ -1,0 +1,33 @@
+class Example {
+
+    class NestedExample {
+
+        int a, b = 0;
+        char c = 'c', d;
+        boolean e = true, f = false;
+        int g = a + b;
+
+        int doSomething(int a, char b, boolean c) {
+            a = a + b;
+            if (a > b) {
+                a = a - b;
+            } else {
+                a = a + b;
+            }
+        }
+    }
+
+    int a, b = 0;
+    char c = 'c', d;
+    boolean e = true, f = false;
+    int g = a + b;
+
+    int doSomething(int a, char b, boolean c) {
+        a = a + b;
+        if (a > b) {
+            a = a - b;
+        } else {
+            a = a + b;
+        }
+    }
+}

@@ -1,0 +1,6 @@
+// Error test for class declaration
+
+a = 12;
+
+class Example {
+}

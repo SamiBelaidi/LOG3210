@@ -1,0 +1,5 @@
+class Example {
+    int a = 0;
+    char b = 'b';
+    boolean c = true;
+}
