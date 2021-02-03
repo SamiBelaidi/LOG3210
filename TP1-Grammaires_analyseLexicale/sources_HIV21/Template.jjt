@@ -128,13 +128,12 @@ TOKEN :
 	< #LETTER: ["a"-"z","A"-"Z","_"] > |
 	< #DIGIT: ["0"-"9"] > |
 	< INTEGER: ["1"-"9"] (["0"-"9"])* | "0" > |
-	< EXP : "e" | "E">|
+	< EXP : ("e" | "E")(<PLUS> | <MINUS>)<INTEGER>>|
 	// // Caution! Allows numbers such as "0000.23"
-	< REAL: (<MINUS>)? (<INTEGER>)? "." (<DIGIT>)* (<EXP> <INTEGER>)? >
-
+	< REAL: (<MINUS>)? (<INTEGER>)? "." (<DIGIT>)* (<EXP>)? >
 }
 
-
+//h = -123.456E+78;
 
 
 
@@ -174,7 +173,7 @@ void Expr() : {}
 void BasicExpr() : {}
 {
 	LOOKAHEAD(2) Identifier() |
-	IntValue()
+	(IntValue() | RealValue())
 }
 
 void BasicBoolExp(): {}
