@@ -133,11 +133,6 @@ TOKEN :
 	< REAL: (<MINUS>)? (<INTEGER>)? "." (<DIGIT>)* (<EXP>)? >
 }
 
-//h = -123.456E+78;
-
-
-
-
 
 //
 // SYNTAX ANALYSIS
@@ -150,13 +145,12 @@ ASTProgram Program() : { }
 
 void Block() : { }
 {
-	(Stmt() | IfStmt())*
+	(Stmt())*
 }
-
 
 void Stmt() : { }
 {
-	AssignStmt() <SEMICOLON>
+	(AssignStmt() <SEMICOLON>) | IfStmt()
 }
 
 void AssignStmt() : { Token t;}
@@ -164,10 +158,52 @@ void AssignStmt() : { Token t;}
 	Identifier() <ASSIGN> Expr()
 }
 
+void IfStmt() : {}
+{
+     <IF> <LPAR> <INTEGER> <RPAR>
+            BlockWithAcc()
+             (LOOKAHEAD(1)<ELSE>BlockWithAcc())?
+}
+
 
 void Expr() : {}
 {
-    BasicExpr()
+    LogicExpr()
+}
+
+void AddExpr() : {}
+{
+   MulExpr() ((<PLUS> | <MINUS>) MulExpr())* //| <LPAR>MulExpr() ((<PLUS> | <MINUS>) MulExpr())*<RPAR>
+}
+
+void MulExpr() : {}
+{
+    NegExpr() ((<FOIS> | <DIV>) NegExpr())* //| <LPAR> BasicExpr() ((<FOIS> | <DIV>) BasicExpr())* <RPAR>
+}
+
+void ParExpr() : {}
+{
+    <LPAR> Expr() <RPAR> | BasicExpr()
+}
+
+void NegExpr() : {}
+{
+    (<MINUS>)* NotExpr()
+}
+
+void NotExpr() : {}
+{
+    (<NOT>)* ParExpr()
+}
+
+void CompareExpr() : {}
+{
+    AddExpr() (<COMPARE> AddExpr())*
+}
+
+void LogicExpr() :{}
+{
+    CompareExpr() (<LOGIC> CompareExpr())*
 }
 
 void BasicExpr() : {}
@@ -176,27 +212,9 @@ void BasicExpr() : {}
 	(IntValue() | RealValue())
 }
 
-void BasicBoolExp(): {}
-{
-    Expr() (<COMPARE> Expr())?
-}
-
-void BoolExp() :{}
-{
-    BasicBoolExp() ((<LOGIC>) BasicBoolExp())*
-}
-
-
-void IfStmt() : {}
-{
-     <IF> <LPAR> <INTEGER> <RPAR>
-            BlockWithAcc()
-            (<ELSE> (IfStmt() | BlockWithAcc()))?
-}
-
 void BlockWithAcc(): {}
 {
-    ((<LACC> (Block()) <RACC>) | (Stmt()))
+    (<LACC> (Block()) <RACC>) | (Stmt())
 }
 
 void Identifier() : { Token t;}
