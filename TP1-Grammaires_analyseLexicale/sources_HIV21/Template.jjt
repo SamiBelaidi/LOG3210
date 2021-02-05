@@ -81,11 +81,14 @@ TOKEN :
 	< STRING: "string"> |
 	< INT: "int"> |
 	< FLOAT: "float" > |
-	< BOOL: "bool"> |
+	< BOOL: "bool" | "boolean"> |
 	< PRINT: "print" > |
 	< INPUT: "input" > |
-	< IN: "in" >
+	< IN: "in" > |
 	// À compléter au besoin
+	< CLASS: "class" > |
+	< VOID: "void"> |
+	< CHAR: "char">
 }
 
 // Operators
@@ -117,7 +120,8 @@ TOKEN :
 	< #OR: "||" > |
 	// À compléter au besoin
 	< LPAR : "(" > |
-	< RPAR : ")" >
+	< RPAR : ")" > |
+	< APP: "\'" >
 }
 
 
@@ -151,22 +155,56 @@ ASTProgram Program() : { }
 
 void Block() : { }
 {
-	(Stmt())*
+	( Stmt() | ClassDeclaration() | TypeDeclaration() )*
 }
 
 void Stmt() : { }
 {
-	AssignStmt() <SEMICOLON> | IfStmt()
+	IfStmt() | AssignStmt() <SEMICOLON>
 }
 
 void AssignStmt() : { Token t;}
 {
-	Identifier() <ASSIGN> Expr()
+	Identifier() [<ASSIGN> Expr()]
 }
 
+//CLASS
+void ClassDeclaration() : {}
+{
+    <CLASS> Identifier() <LACC> Block() <RACC>
+}
+
+void TypeDeclaration() : {}
+{
+	(<INT> | <FLOAT> | <BOOL> | <CHAR>) BasicDeclaration() |
+    (<VOID> MethodDeclaration())
+}
+
+void BasicDeclaration() #void : {}
+{
+    LOOKAHEAD(Identifier() <LPAR>) MethodDeclaration() |
+    (AttributDeclaration() <SEMICOLON>)
+}
+
+void TypeInitializationParameter() : {}
+{
+	(<INT> | <FLOAT> | <BOOL> | <CHAR>) AssignStmt()
+}
+
+void AttributDeclaration() : {}
+{
+    AssignStmt() (<COMMA> AssignStmt())*
+}
+
+void MethodDeclaration() : {}
+{ // id(Type param) { block() }
+    Identifier() <LPAR> [TypeInitializationParameter() (<COMMA> TypeInitializationParameter())*] <RPAR> <LACC> Block() <RACC>
+}
+
+// OPERATION
 void BasicExpr() : {}
 {
-	LOOKAHEAD(2) Identifier() | (IntValue() | RealValue())
+    LOOKAHEAD(2) Identifier() | IntValue() | RealValue() | StringValue()
 }
 
 void Expr() : {}
@@ -209,21 +247,20 @@ void LogicExpr() :{}
     BoolExpr() (<LOGIC> BoolExpr())*
 }
 
-
-
-
+//IF ESLE
 void IfStmt() : {}
 {
-     <IF> <LPAR> <INTEGER> <RPAR>
+     <IF> <LPAR> Expr() <RPAR>
             BlockWithAcc()
             (LOOKAHEAD(1) <ELSE> BlockWithAcc())?
 }
 
-void BlockWithAcc(): {}
+void BlockWithAcc() #void : {}
 {
     ((<LACC> (Stmt())* <RACC>) | (Stmt()))
 }
 
+// DEFAULT
 void Identifier() : { Token t;}
 {
 	t = <IDENTIFIER> {jjtThis.setValue(t.image);}
@@ -237,4 +274,9 @@ void IntValue() : { Token t;}
 void RealValue() : { Token t;}
 {
 	t = <REAL> {jjtThis.setValue(Double.parseDouble(t.image));}
+}
+
+void StringValue() : {}
+{
+	<APP> Identifier() <APP>
 }
