@@ -1,0 +1,5 @@
+fn greet(name: u64, bue: u8) -> bool {
+    compi a: f64 = -45.0;
+
+    (true && false) || false;
+}

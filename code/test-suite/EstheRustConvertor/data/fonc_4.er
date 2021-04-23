@@ -1,0 +1,12 @@
+fn greet(name: u64) -> bool {
+    compi a: f64 = -45.0;
+
+    (true && false) && true;
+}
+
+
+fn greet2(vari: f32) -> string {
+    compi a: f64 = -45.0;
+    compi a_boolean: bool = greet(vari);
+    "return val peeppsss";
+}

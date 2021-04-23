@@ -1,0 +1,4 @@
+if (1 + 2) != (5 - 5 - 5) {
+    compi megantheestalion: string = "Body ody ody ody ody ody ody........";
+    compi allo: f64 = 0.9345;
+}

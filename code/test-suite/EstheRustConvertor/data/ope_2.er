@@ -1,0 +1,2 @@
+compi variable2: bool = true == true;
+compi variable3: bool = (false || true) && !false;

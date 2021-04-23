@@ -1,0 +1,3 @@
+fn operateur_coeur() -> () {
+    *<3*
+}

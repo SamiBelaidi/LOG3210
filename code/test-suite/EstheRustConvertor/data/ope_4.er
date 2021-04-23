@@ -1,0 +1,3 @@
+compi variable7: f64 = -9.0;
+compi variable8: f64 = 0.987;
+compi variable9: f64 = -123.456E+78 + 1;

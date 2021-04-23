@@ -1,0 +1,322 @@
+options {
+	JAVA_UNICODE_ESCAPE=true;
+	STATIC=false;					// 1 seul parseur actif a la fois (+ rapide)
+	MULTI=true;						// type noeud = f(nom noeud)
+	VISITOR=true;					// Cree une methode accept(visiteur)
+}
+
+//
+// PARSER DEFINITION
+//
+
+PARSER_BEGIN(Parser)
+
+package analyzer.ast;
+
+public class Parser
+{
+	public static ASTProgram ParseTree(java.io.InputStream input) throws ParseException
+	{
+		Parser c = new Parser(input);
+		return c.Program();
+	}
+}
+
+PARSER_END(Parser)
+
+//
+// LEXICAL ANALYSIS
+//
+
+// White space
+
+SKIP :
+{
+	< ( " " | "\t" | "\n" | "\r" )+	>
+}
+
+// Comments
+
+MORE :
+{
+  "//" : IN_SINGLE_LINE_COMMENT
+|
+  <"/**" ~["/"]> { input_stream.backup(1); } : IN_FORMAL_COMMENT
+|
+  "/*" : IN_MULTI_LINE_COMMENT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
+}
+
+<IN_FORMAL_COMMENT>
+SPECIAL_TOKEN :
+{
+  <FORMAL_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_MULTI_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+  <MULTI_LINE_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_SINGLE_LINE_COMMENT,IN_FORMAL_COMMENT,IN_MULTI_LINE_COMMENT>
+MORE :
+{
+  < ~[] >
+}
+
+
+
+
+// Keywords
+TOKEN :
+{
+	< IF: "if"	> |
+	< ELSE: "else" > |
+	< WHILE: "while" > |
+    < BOOL : <TRUE> | <FALSE> > |
+	< #TRUE: "true" > |
+	< #FALSE: "false" > |
+    < IMPORTSTART: "estheRustImportStart" > |
+    < IMPORTEND : "estheRustImportEnd"> |
+    < DECL : "compi" > |
+    < FUN: "fn">
+
+}
+
+//Type
+TOKEN :
+{
+    < TYPE: <BOOLEAN> | <U8> | <U16>| <U32>| <U64>| <U128>| <F32>| <F64> | <STRINGTYPE>> |
+    < #BOOLEAN: "bool"> |
+    < #U8 : "u8"> |
+    < #U16 : "u16"> |
+    < #U32 : "u32"> |
+    < #U64 : "u64"> |
+    < #U128 : "u128"> |
+    < #F32 : "f32"> |
+    < #F64 : "f64"> |
+    < #STRINGTYPE : "string">
+}
+
+// Operators
+TOKEN :
+{
+	<ASSIGN: < EQUAL >  > |
+	<COMPARE: < LESS > | < LESSEQUAL > | < GREAT > | <GREATEQUAL > | < DIFF > | < EQUALEQUAL > > |
+    <MULOP: <FOIS> | <DIV> | <MOD>> |
+    <BOOLOP : <AND> | <OR> > |
+
+    < PLUS: "+" > |
+	< MINUS: "-" > |
+	< #EQUAL: "=" > |
+
+	< #LESS: "<" > |
+	< #LESSEQUAL: "<=" > |
+	< #GREAT: ">" > |
+	< #GREATEQUAL: ">=" > |
+	< #DIFF: "!=" > |
+	< #EQUALEQUAL: "==" > |
+
+
+	< #FOIS: "*" > |
+	< #DIV: "/" > |
+	< #MOD: "%" > |
+	< #POW: "**" >|
+    < #AND: "&&" > |
+    < #OR: "||" > |
+
+    < NOT: "!" > |
+
+	< LPAREN: "(" > |
+	< RPAREN: ")" > |
+	< LACC: "{" > |
+	< RACC: "}" > |
+	< LSBRAC: "[" > |
+	< RSBRAC: "]" > |
+	< COLON: ":" > |
+	< ENDSTMT : ";" > |
+	< COMMA: "," > |
+	// À compléter au besoin
+
+	< DOUBLEQUOTE: "\"">|
+	< ARROW : "->">|
+
+	< COEUR: "*<3*">
+}
+
+
+// Identifiers and numbers
+TOKEN :
+{
+	< IDENTIFIER: <LETTER> ( <LETTER> | <DIGIT> )* > |
+	< #LETTER: ["a"-"z","A"-"Z","_"] > |
+	< #DIGIT: ["0"-"9"] > |
+	< INTEGER: ["1"-"9"] (["0"-"9"])* | "0" > |
+	< REAL: (<INTEGER>)+ "." (["0"-"9"])+ (<EXPONENT>)? |
+			  (<INTEGER>)+ <EXPONENT> > |
+	< #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ > |
+	< STRING :  <DOUBLEQUOTE> (<LETTER> | " " | <DIGIT> | "." | <COMMA> | "!" | "'" | "*")* <DOUBLEQUOTE> >
+}
+
+//
+// SYNTAX ANALYSIS
+//
+
+ASTProgram Program() : { }
+{
+	(importStmt())? Block() <EOF> { return jjtThis;  }
+}
+
+void Block() : { }
+{
+	(LOOKAHEAD(2) Stmt())*
+}
+
+//ATTENTION!! À changer
+void Stmt() : { }
+{
+  FunctionDeclaration() | FunctionCall() | WhileStmt() | DeclarationStmt() | IfStmt() | coeurValue() | <ENDSTMT>
+}
+
+void DeclarationStmt():{ }
+{
+    <DECL> Identifier() <COLON> <TYPE> <ASSIGN> Expr() <ENDSTMT>
+}
+
+void WhileStmt() : {}
+{
+    <WHILE> BoolExpr() <LACC> Block() <RACC>
+}
+
+void IfStmt(): { }
+{
+    <IF> BoolExpr() <LACC> Block() <RACC> [<ELSE> <LACC> Block() <RACC>]
+}
+
+void AssignStmt() : { }
+{
+    Identifier() <ASSIGN> Expr()
+}
+
+void FunctionDeclaration(): { }
+{
+    <FUN> Identifier()
+    FunctionParams()
+    <ARROW>
+    ((<LPAREN><RPAREN>  <LACC> Block() <RACC>) |
+    (<TYPE>  <LACC> Block() ReturnStmt()<RACC>))
+    // ce "ou" entre les lignes 212 et 213 permet de differencier une fonction avec
+    // retour et une fonction sans
+}
+
+void FunctionParams():{ }
+{
+    <LPAREN> ((Identifier() <COLON> <TYPE>) (<COMMA> Identifier() <COLON> <TYPE>)*)? <RPAREN>
+}
+
+void FunctionCall(): { }
+{
+    Identifier() FunctionCallParams()
+}
+
+void FunctionCallParams(): { }
+{
+    <LPAREN> (Expr() (<COMMA> Expr())*)? <RPAREN>
+}
+
+void ReturnStmt(): { }
+{
+    Expr() <ENDSTMT>
+}
+
+void Expr() :{Token t; }
+{
+    StringValue() | BoolExpr()
+}
+
+void BoolExpr() : {Token t;} {
+    CompExpr() (t = <BOOLOP> {jjtThis.addOp(t.image);} CompExpr() )*
+}
+
+void CompExpr() : {Token t;}
+{
+    AddExpr() [t = <COMPARE> AddExpr() {jjtThis.setValue(t.image);}]
+}
+
+void AddExpr() : { Token t;}
+{
+    MulExpr() ((t = <PLUS> | t = <MINUS>) {jjtThis.addOp(t.image);} MulExpr())*
+}
+
+void MulExpr() : { Token t;}
+{
+    UnaExpr() (t = <MULOP> {jjtThis.addOp(t.image);} UnaExpr())*
+}
+
+void UnaExpr() : { Token t;}
+{
+     [t = <MINUS> {jjtThis.addOp(t.image);}] NotExpr()
+}
+
+void NotExpr() : { Token t;}
+{
+     (t = <NOT> {jjtThis.addOp(t.image);})* GenValue()
+}
+
+void ParExpr() : { Token t;}
+{
+    <LPAREN> Expr() <RPAREN>
+}
+
+void GenValue(): { }
+{
+    LOOKAHEAD(2)
+    FunctionCall()|
+    ParExpr()|
+    BoolValue() |
+    Identifier() |
+    IntValue() |
+    RealValue()
+}
+
+void importStmt(): { }
+{
+    <IMPORTSTART> (Identifier() <ENDSTMT>)* <IMPORTEND>
+}
+
+void IntValue() : { Token t;}
+{
+	t = <INTEGER> {jjtThis.setValue(Integer.parseInt(t.image));}
+}
+
+void RealValue() : {Token t;}
+{
+     t = <REAL> {jjtThis.setValue((t.image));}
+}
+
+void Identifier() : { Token t;}
+{
+	t = <IDENTIFIER> {jjtThis.setValue(t.image);}
+}
+
+
+void BoolValue() : {Token t;}
+{
+    t = <BOOL> {jjtThis.setValue(t.image);}
+}
+
+void StringValue() : {Token t;}
+{
+     t = <STRING> {jjtThis.setValue(t.image);}
+}
+
+void coeurValue() :{}
+{
+    <COEUR>
+}

@@ -1,0 +1,10 @@
+compi a: bool = true || false && (4 + 4) > 2;
+compi b: bool = false;
+while (a && b) && 4 + 5 + (2) {
+    compi drake: string = "Scary Hours";
+    compi allo: f64 = -0.98533545;
+
+    while true && false {
+        compi reeltoreel: string = "I LIKE TO MOVE IT IT...";
+    }
+}

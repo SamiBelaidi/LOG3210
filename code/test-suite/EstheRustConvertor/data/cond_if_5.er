@@ -1,0 +1,12 @@
+compi a: bool = true || false;
+compi b: bool = false;
+if a == b {
+    compi megantheestalion: string = "Body ody ody ody ody ody ody........";
+    compi allo: f64 = -0.98533545;
+
+    if true && false || false != false {
+        compi patricksebastien: string = "ET ON FAIT TOURNER LES SERVIETTES *flute flute flute*";
+
+        if false {}
+    }
+}

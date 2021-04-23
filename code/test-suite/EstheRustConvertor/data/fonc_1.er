@@ -1,0 +1,3 @@
+fn exemple2(name: string) -> () {
+    compi a: string = "test1";
+}

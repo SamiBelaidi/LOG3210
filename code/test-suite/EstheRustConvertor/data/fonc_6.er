@@ -1,0 +1,11 @@
+fn bye() -> () {}
+
+bye();
+
+fn greet(name: u64) -> bool {
+    compi a: f64 = -45.0;
+
+    (true && false) && true;
+}
+
+compi val: bool = greet(89);

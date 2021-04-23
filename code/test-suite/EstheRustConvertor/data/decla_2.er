@@ -1,0 +1,14 @@
+estheRustImportStart
+decimal;
+random;
+estheRustImportEnd
+
+compi variable1: string = "dfsfsdfsdfs";
+compi variable2: bool = true;
+compi variable3: bool = false;
+compi variable4: u8 = 9;
+compi variable5: u16 = 9;
+compi variable6: u64 = 9;
+compi variable7: f64 = 9.0;
+compi variable8: f64 = 0.987;
+compi variable9: f64 = -123.456E+78;

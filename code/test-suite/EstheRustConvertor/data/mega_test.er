@@ -1,0 +1,54 @@
+estheRustImportStart
+os;
+estheRustImportEnd
+
+compi variable1: string = "dfsfsdfsdfs";
+compi variable2: bool = true;
+compi variable3: bool = false;
+compi variable4: u8 = 9;
+compi variable5: u64 = 9;
+compi variable6: f64 = 9.0;
+compi variable6: f64 = 0.987;
+
+fn greet(n: bool, m: u8) -> string {
+    if n {}
+    "retun val";
+}
+
+fn greet2() -> () { }
+
+fn greet3() -> u8 {
+    1;
+}
+
+fn greet4() -> bool {
+    true;
+}
+
+fn greet5(n: string, m: string) -> string {
+    if n {}
+    "retun val";
+}
+
+compi n: u8 = 1;
+
+if greet(n, 15) {
+    print("fizzbuzz");
+}
+
+if true {
+    print("fizz");
+}
+
+if 1 == greet3() {
+    print("buzz");
+    if n {}
+} else {
+    print("bye");
+}
+
+while true {}
+
+while greet4() {
+    greet5("allo", "bye");
+}

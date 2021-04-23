@@ -1,0 +1,14 @@
+estheRustImportStart
+decimal;
+random;
+estheRustImportEnd
+
+compi variable1: string = "a b c d e f g h i j k lmnope q r s t u v w x y z. Je connais mon alphabet, du debut jusqu'a la fin!";
+compi variable2: bool = true != true;
+compi variable3: bool = (!false && !true) && false;
+compi variable4: u8 = 9 - 9 - (9 + 9) - 9 + 9;
+compi variable5: u16 = ((9 + 5) - 19023);
+compi variable6: u64 = -9 + 0;
+compi variable7: f64 = -9.0;
+compi variable8: f64 = 0.987;
+compi variable9: f64 = (-1283.4509E+78 - 847) - 5;
