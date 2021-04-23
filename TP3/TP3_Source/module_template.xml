@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_template" default="compile.module.template">
+  <dirname property="module.template.basedir" file="${ant.file.module_template}"/>
+  
+  <property name="module.jdk.home.template" value="${jdk.home.11}"/>
+  <property name="module.jdk.bin.template" value="${jdk.bin.11}"/>
+  <property name="module.jdk.classpath.template" value="jdk.classpath.11"/>
+  
+  <property name="compiler.args.template" value="-encoding UTF-8 -source 8 -target 8 ${compiler.args}"/>
+  
+  <property name="template.output.dir" value="${module.template.basedir}/out/production/Template"/>
+  <property name="template.testoutput.dir" value="${module.template.basedir}/out/test/Template"/>
+  
+  <path id="template.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="template.module.production.classpath">
+    <path refid="${module.jdk.classpath.template}"/>
+  </path>
+  
+  <path id="template.runtime.production.module.classpath">
+    <pathelement location="${template.output.dir}"/>
+  </path>
+  
+  <path id="template.module.classpath">
+    <path refid="${module.jdk.classpath.template}"/>
+    <pathelement location="${template.output.dir}"/>
+    <pathelement location="${idea.home}/lib/hamcrest-core-1.3.jar"/>
+    <pathelement location="${idea.home}/lib/junit-4.12.jar"/>
+  </path>
+  
+  <path id="template.runtime.module.classpath">
+    <pathelement location="${template.testoutput.dir}"/>
+    <pathelement location="${template.output.dir}"/>
+    <pathelement location="${idea.home}/lib/hamcrest-core-1.3.jar"/>
+    <pathelement location="${idea.home}/lib/junit-4.12.jar"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.template">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.template">
+    <patternset refid="excluded.from.module.template"/>
+  </patternset>
+  
+  <path id="template.module.sourcepath">
+    <dirset dir="${module.template.basedir}">
+      <include name="src"/>
+      <include name="gen-src"/>
+    </dirset>
+  </path>
+  
+  <path id="template.module.test.sourcepath">
+    <dirset dir="${module.template.basedir}">
+      <include name="test"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.template" depends="compile.module.template.production,compile.module.template.tests" description="Compile module Template"/>
+  
+  <target name="compile.module.template.production" depends="register.custom.compilers" description="Compile module Template; production classes">
+    <mkdir dir="${template.output.dir}"/>
+    <javac2 destdir="${template.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.template}/javac">
+      <compilerarg line="${compiler.args.template}"/>
+      <bootclasspath refid="template.module.bootclasspath"/>
+      <classpath refid="template.module.production.classpath"/>
+      <src refid="template.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.template"/>
+    </javac2>
+    
+    <copy todir="${template.output.dir}">
+      <fileset dir="${module.template.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+      <fileset dir="${module.template.basedir}/gen-src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.template.tests" depends="register.custom.compilers,compile.module.template.production" description="compile module Template; test classes" unless="skip.tests">
+    <mkdir dir="${template.testoutput.dir}"/>
+    <javac2 destdir="${template.testoutput.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.template}/javac">
+      <compilerarg line="${compiler.args.template}"/>
+      <bootclasspath refid="template.module.bootclasspath"/>
+      <classpath refid="template.module.classpath"/>
+      <src refid="template.module.test.sourcepath"/>
+      <patternset refid="excluded.from.compilation.template"/>
+    </javac2>
+    
+    <copy todir="${template.testoutput.dir}">
+      <fileset dir="${module.template.basedir}/test">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="clean.module.template" description="cleanup module">
+    <delete dir="${template.output.dir}"/>
+    <delete dir="${template.testoutput.dir}"/>
+  </target>
+</project>

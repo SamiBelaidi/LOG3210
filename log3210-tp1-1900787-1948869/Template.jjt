@@ -81,11 +81,14 @@ TOKEN :
 	< STRING: "string"> |
 	< INT: "int"> |
 	< FLOAT: "float" > |
-	< BOOL: "bool"> |
+	< BOOL: "bool" | "boolean"> |
 	< PRINT: "print" > |
 	< INPUT: "input" > |
-	< IN: "in" >
+	< IN: "in" > |
 	// À compléter au besoin
+	< CLASS: "class" > |
+	< VOID: "void"> |
+	< CHAR: "char">
 }
 
 // Operators
@@ -117,7 +120,8 @@ TOKEN :
 	< #OR: "||" > |
 	// À compléter au besoin
 	< LPAR : "(" > |
-	< RPAR : ")" >
+	< RPAR : ")" > |
+	< APP: "\'" >
 }
 
 
@@ -128,10 +132,16 @@ TOKEN :
 	< #LETTER: ["a"-"z","A"-"Z","_"] > |
 	< #DIGIT: ["0"-"9"] > |
 	< INTEGER: ["1"-"9"] (["0"-"9"])* | "0" > |
-	< EXP : ("e" | "E")(<PLUS> | <MINUS>)<INTEGER>>|
+	< #EXP : ("e" | "E") (<PLUS>|<MINUS>)?>|
 	// // Caution! Allows numbers such as "0000.23"
-	< REAL: (<MINUS>)? (<INTEGER>)? "." (<DIGIT>)* (<EXP>)? >
+	< REAL: (<INTEGER>)? "." (<DIGIT>)* (<EXP> <INTEGER>)? >
+
 }
+
+
+
+
+
 
 
 //
@@ -145,25 +155,56 @@ ASTProgram Program() : { }
 
 void Block() : { }
 {
-	(Stmt())*
+	( Stmt() | ClassDeclaration() | TypeDeclaration() )*
 }
 
 void Stmt() : { }
 {
-	(AssignStmt() <SEMICOLON>) | IfStmt()
+	IfStmt() | AssignStmt() <SEMICOLON>
 }
 
 void AssignStmt() : { Token t;}
 {
-	Identifier() <ASSIGN> Expr()
+	Identifier() [<ASSIGN> Expr()]
 }
 
-
-void IfStmt() : {}
+//CLASS
+void ClassDeclaration() : {}
 {
-     <IF> <LPAR> <INTEGER> <RPAR>
-            BlockWithAcc()
-             (LOOKAHEAD(1)<ELSE>BlockWithAcc())?
+    <CLASS> Identifier() <LACC> Block() <RACC>
+}
+
+void TypeDeclaration() : {}
+{
+	(<INT> | <FLOAT> | <BOOL> | <CHAR>) BasicDeclaration() |
+    (<VOID> MethodDeclaration())
+}
+
+void BasicDeclaration() #void : {}
+{
+    LOOKAHEAD(Identifier() <LPAR>) MethodDeclaration() |
+    (AttributDeclaration() <SEMICOLON>)
+}
+
+void TypeInitializationParameter() : {}
+{
+	(<INT> | <FLOAT> | <BOOL> | <CHAR>) AssignStmt()
+}
+
+void AttributDeclaration() : {}
+{
+    AssignStmt() (<COMMA> AssignStmt())*
+}
+
+void MethodDeclaration() : {}
+{ // id(Type param) { block() }
+    Identifier() <LPAR> [TypeInitializationParameter() (<COMMA> TypeInitializationParameter())*] <RPAR> <LACC> Block() <RACC>
+}
+
+// OPERATION
+void BasicExpr() : {}
+{
+    LOOKAHEAD(2) Identifier() | IntValue() | RealValue() | StringValue()
 }
 
 void Expr() : {}
@@ -171,53 +212,55 @@ void Expr() : {}
     LogicExpr()
 }
 
-void AddExpr() : {}
-{
-   MulExpr() ((<PLUS> | <MINUS>) MulExpr())* //| <LPAR>MulExpr() ((<PLUS> | <MINUS>) MulExpr())*<RPAR>
-}
-
-void MulExpr() : {}
-{
-    NegExpr() ((<FOIS> | <DIV>) NegExpr())* //| <LPAR> BasicExpr() ((<FOIS> | <DIV>) BasicExpr())* <RPAR>
-}
-
 void ParExpr() : {}
 {
     <LPAR> Expr() <RPAR> | BasicExpr()
 }
 
-void NegExpr() : {}
-{
-    (<MINUS>)* NotExpr()
-}
-
-void NotExpr() : {}
+void NotExpr() :{}
 {
     (<NOT>)* ParExpr()
 }
 
-void CompareExpr() : {}
+void NegExpr() :{}
+{
+    (<MINUS>)* NotExpr()
+}
+
+void MulExpr() : {}
+{
+    NegExpr() ((<FOIS> | <DIV>) NegExpr())*
+}
+
+void AddExpr() : {}
+{
+    MulExpr() ((<PLUS> | <MINUS>) MulExpr())*
+}
+
+void BoolExpr(): {}
 {
     AddExpr() (<COMPARE> AddExpr())*
 }
 
 void LogicExpr() :{}
 {
-    CompareExpr() (<LOGIC> CompareExpr())*
+    BoolExpr() (<LOGIC> BoolExpr())*
 }
 
-void BasicExpr() : {}
+//IF ESLE
+void IfStmt() : {}
 {
-	LOOKAHEAD(2) Identifier() |
-	(IntValue() | RealValue())
+     <IF> <LPAR> Expr() <RPAR>
+            BlockWithAcc()
+            (LOOKAHEAD(1) <ELSE> BlockWithAcc())?
 }
 
-void BlockWithAcc(): {}
+void BlockWithAcc() #void : {}
 {
-
-    (<LACC> (Block()) <RACC>) | (Stmt())
+    ((<LACC> (Stmt())* <RACC>) | (Stmt()))
 }
 
+// DEFAULT
 void Identifier() : { Token t;}
 {
 	t = <IDENTIFIER> {jjtThis.setValue(t.image);}
@@ -231,4 +274,9 @@ void IntValue() : { Token t;}
 void RealValue() : { Token t;}
 {
 	t = <REAL> {jjtThis.setValue(Double.parseDouble(t.image));}
+}
+
+void StringValue() : {}
+{
+	<APP> Identifier() <APP>
 }
