@@ -1,0 +1,13 @@
+NUMBER_OF_REGISTER_AVAILABLE: 3
+
+t0 = 2 * c
+t1 = t0 + d
+t = d * t1
+t2 = c * c
+t3 = d * d
+c = t2 + t3
+d = t
+i = i / 2
+
+return a,b,c,d,t,i
+
