@@ -1,0 +1,18 @@
+<component name="libraryTable">
+  <library name="ParserVersion">
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/libs/javacc-7.0.2/examples/GUIParsing/ParserVersion" />
+      <root url="file://$PROJECT_DIR$/libs/javacc-7.0.2/examples/GUIParsing/TokenMgrVersion" />
+      <root url="file://$PROJECT_DIR$/libs/javacc-7.0.2/examples/Interpreter" />
+      <root url="file://$PROJECT_DIR$/libs/javacc-7.0.2/examples/JJTreeExamples/java" />
+      <root url="file://$PROJECT_DIR$/libs/javacc-7.0.2/examples/JavaGrammars" />
+      <root url="file://$PROJECT_DIR$/libs/javacc-7.0.2/examples/JavaGrammars/1.5" />
+      <root url="file://$PROJECT_DIR$/libs/javacc-7.0.2/examples/Obfuscator" />
+      <root url="file://$PROJECT_DIR$/libs/javacc-7.0.2/examples/Obfuscator/input" />
+      <root url="file://$PROJECT_DIR$/libs/javacc-7.0.2/examples/Transformer" />
+      <root url="file://$PROJECT_DIR$/libs/javacc-7.0.2/examples/VTransformer" />
+    </SOURCES>
+  </library>
+</component>
