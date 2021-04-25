@@ -71,9 +71,9 @@ CLEAR
 
 
 // TODO:: This instruction is just a placeholder to let the code end, remove the code below!
-LD R0, i
-DEC R0
-ST i, R0
+//LD R0, i
+//DEC R0
+//ST i, R0
 // TODO:: Remove the placeholder above of this line!
 
 CLEAR

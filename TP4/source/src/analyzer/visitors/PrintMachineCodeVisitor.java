@@ -11,12 +11,14 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
 
     private Integer REG = 256; // default register limitation
     private ArrayList<String> RETURNED = new ArrayList<String>(); // returned variables from the return statement
-    private ArrayList<MachLine> CODE   = new ArrayList<MachLine>(); // representation of the Machine Code in Machine lines (MachLine)
+    private ArrayList<MachLine> CODE = new ArrayList<MachLine>(); // representation of the Machine Code in Machine lines (MachLine)
 
     private ArrayList<String> MODIFIED = new ArrayList<String>(); // could be use to keep which variable/pointer are modified while going through the intermediate code
-    private ArrayList<String> REGISTERS = new ArrayList<String>();; // map to get the registers
+    private ArrayList<String> REGISTERS = new ArrayList<String>();
+    ; // map to get the registers
 
-    private HashMap<String,String> OPMap; // map to get the operation name from it's value
+    private HashMap<String, String> OPMap; // map to get the operation name from it's value
+
     public PrintMachineCodeVisitor(PrintWriter writer) {
         m_writer = writer;
 
@@ -52,7 +54,7 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
 
     @Override
     public Object visit(ASTReturnStmt node, Object data) {
-        for(int i = 0; i < node.jjtGetNumChildren(); i++) {
+        for (int i = 0; i < node.jjtGetNumChildren(); i++) {
             RETURNED.add(((ASTIdentifier) node.jjtGetChild(i)).getValue()); // returned values
         }
 
@@ -76,12 +78,13 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         // On ne visite pas les enfants puisque l'on va manuellement chercher leurs valeurs
         // On n'a rien a transférer aux enfants
         String assign = (String) node.jjtGetChild(0).jjtAccept(this, null);
-        String left   = (String) node.jjtGetChild(1).jjtAccept(this, null);
-        String right  = (String) node.jjtGetChild(2).jjtAccept(this, null);
-        String op     = node.getOp();
+        String left = (String) node.jjtGetChild(1).jjtAccept(this, null);
+        String right = (String) node.jjtGetChild(2).jjtAccept(this, null);
+        String op = node.getOp();
 
         // TODO: Modify CODE to add the needed MachLine.
         //       here the type of Assignment is "assigned = left op right"
+        CODE.add(new MachLine(op, assign, left, right));
         return null;
     }
 
@@ -90,12 +93,12 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         // On ne visite pas les enfants puisque l'on va manuellement chercher leurs valeurs
         // On n'a rien a transférer aux enfants
         String assign = (String) node.jjtGetChild(0).jjtAccept(this, null);
-        String right  = (String) node.jjtGetChild(1).jjtAccept(this, null);
+        String right = (String) node.jjtGetChild(1).jjtAccept(this, null);
 
         // TODO: Modify CODE to add the needed MachLine.
         //       here the type of Assignment is "assigned = - right"
         //       suppose the left part to be the constant #O
-
+        CODE.add(new MachLine("-", assign, "#0", right));
         return null;
     }
 
@@ -104,11 +107,12 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         // On ne visite pas les enfants puisque l'on va manuellement chercher leurs valeurs
         // On n'a rien a transférer aux enfants
         String assign = (String) node.jjtGetChild(0).jjtAccept(this, null);
-        String right  = (String) node.jjtGetChild(1).jjtAccept(this, null);
+        String right = (String) node.jjtGetChild(1).jjtAccept(this, null);
 
         // TODO: Modify CODE to add the needed MachLine.
         //       here the type of Assignment is "assigned = right"
         //       suppose the left part to be the constant #O
+        CODE.add(new MachLine("+", assign, "#0", right));
         return null;
     }
 
@@ -119,7 +123,7 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
 
     @Override
     public Object visit(ASTIntValue node, Object data) {
-        return "#"+String.valueOf(node.getValue());
+        return "#" + String.valueOf(node.getValue());
     }
 
     @Override
@@ -133,7 +137,8 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         public HashMap<String, ArrayList<Integer>> nextuse = new HashMap<String, ArrayList<Integer>>();
 
         // Constructor without parameter
-        public NextUse() {}
+        public NextUse() {
+        }
 
         // Constructor with parameter
         public NextUse(HashMap<String, ArrayList<Integer>> nextuse) {
@@ -158,8 +163,8 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
             String buff = "";
             boolean first = true;
             for (String k : set_ordered(nextuse.keySet())) {
-                if (! first) {
-                    buff +=", ";
+                if (!first) {
+                    buff += ", ";
                 }
                 Collections.sort(nextuse.get(k));
                 buff += k + ":" + nextuse.get(k);
@@ -184,10 +189,10 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         public HashSet<String> REF = new HashSet<String>();
         public HashSet<String> DEF = new HashSet<String>();
 
-        public HashSet<String> Life_IN  = new HashSet<String>();
+        public HashSet<String> Life_IN = new HashSet<String>();
         public HashSet<String> Life_OUT = new HashSet<String>();
 
-        public NextUse Next_IN  = new NextUse();
+        public NextUse Next_IN = new NextUse();
         public NextUse Next_OUT = new NextUse();
 
         // Constructor
@@ -204,22 +209,49 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
             if (this.RIGHT.charAt(0) != ('#'))
                 REF.add(this.RIGHT);
         }
+
         public String toString() {
             String buff = "";
-            buff += "// Life_IN  : " +  Life_IN.toString() +"\n";
-            buff += "// Life_OUT : " +  Life_OUT.toString() +"\n";
-            buff += "// Next_IN  : " +  Next_IN.toString() +"\n";
-            buff += "// Next_OUT : " +  Next_OUT.toString() +"\n";
+            buff += "// Life_IN  : " + Life_IN.toString() + "\n";
+            buff += "// Life_OUT : " + Life_OUT.toString() + "\n";
+            buff += "// Next_IN  : " + Next_IN.toString() + "\n";
+            buff += "// Next_OUT : " + Next_OUT.toString() + "\n";
             return buff;
         }
     }
 
     private void compute_LifeVar() {
         // TODO: Implement LifeVariable algorithm on the CODE array (for basic bloc)
+        CODE.get(CODE.size() - 1).Life_OUT.addAll(RETURNED);
+        for (int i = CODE.size() - 1; i >= 0; i--) {
+            if (i < (CODE.size() - 1)) {
+                CODE.get(i).Life_OUT = CODE.get(i + 1).Life_IN;
+            }
+            CODE.get(i).Life_IN.addAll(CODE.get(i).Life_OUT);
+            CODE.get(i).Life_IN.removeAll(CODE.get(i).DEF);
+            CODE.get(i).Life_IN.addAll(CODE.get(i).REF);
+        }
     }
 
     private void compute_NextUse() {
         // TODO: Implement NextUse algorithm on the CODE array (for basic bloc)
+        for (int i = CODE.size() - 1; i >= 0; i--) {
+            if (i < CODE.size() - 1) {
+                CODE.get(i).Next_OUT = CODE.get(i + 1).Next_IN;
+            }
+
+            int finalI = i;
+            CODE.get(i).Next_OUT.nextuse.forEach((v, n) -> {
+                if (!CODE.get(finalI).DEF.contains((v))) {
+                    n.forEach(integer -> {
+                        CODE.get(finalI).Next_IN.add(v, integer);
+                    });
+                }
+            });
+            CODE.get(i).REF.forEach(s -> {
+                CODE.get(finalI).Next_IN.add(s, finalI);
+            });
+        }
     }
 
 
@@ -232,16 +264,63 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         // /!\ TODO this function should generate the LD and ST when needed
 
         // TODO: if var is a constant (starts with '#'), return var
+        if (var.charAt(0) == '#') {
+            return var;
+        }
 
         // TODO: if REGISTERS contains var, return "R"+index
+        if (REGISTERS.contains((var))) {
+            return "R" + REGISTERS.indexOf(var);
+        }
 
         // TODO: if REGISTERS size is not max (<REG), add var to REGISTERS and return "R"+index
+        if (REGISTERS.size() < REG) {
+            REGISTERS.add(var);
+            if (load_if_not_found) {
+                m_writer.println("LD R" + REGISTERS.indexOf(var) + ", " + var);
+            }
+            return "R" + REGISTERS.indexOf((var));
+        }
 
         // TODO: if REGISTERS has max size,
         //          put var in space of an other variable which is not used anymore
         //          or
         //          put var in space of var which as the largest next-use
+        if (REGISTERS.size() == REG) {
+            int largest = -1;
+            String chosenOne = "";
 
+            for (String it : REGISTERS) {
+                // TODO: 1) UNUSED
+                if (!life.contains(it)) {
+                    final String ans = "R" + REGISTERS.indexOf(it);
+                    if (load_if_not_found) {
+                        m_writer.println("LD R" + REGISTERS.indexOf(it) + ", " + var);
+                    }
+                    REGISTERS.set(REGISTERS.indexOf(it), var);
+                    return ans;
+                }
+                if (next.nextuse.containsKey(it)) {
+                    if (next.nextuse.get(it).get(0) >= largest) {
+                        largest = next.nextuse.get(it).get(0);
+                        chosenOne = it;
+                    }
+                } else {
+                    final String ans = "R" + REGISTERS.indexOf(it);
+                    setRegister(REGISTERS.indexOf(it), var);
+                    if (load_if_not_found) {
+                        m_writer.println("LD R" + REGISTERS.indexOf(var) + ", " + var);
+                    }
+                    return ans;
+                }
+            }
+            final String ans = "R" + REGISTERS.indexOf(chosenOne);
+            setRegister(REGISTERS.indexOf(chosenOne), var);
+            if (load_if_not_found) {
+                m_writer.println("LD R" + REGISTERS.indexOf(var) + ", " + var);
+            }
+            return ans;
+        }
         return null;
     }
 
@@ -249,6 +328,18 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         // TODO: Print the machine code (this function needs to be change)
         for (int i = 0; i < CODE.size(); i++) { // print the output
             m_writer.println("// Step " + i);
+
+            MachLine line = CODE.get(i);
+
+            String regLeft = choose_register(line.LEFT, line.Life_IN, line.Next_IN, !REGISTERS.contains(line.LEFT));
+
+            String regRight = choose_register(line.RIGHT, line.Life_IN, line.Next_IN, !REGISTERS.contains(line.RIGHT));
+
+            String regAssign = choose_register(line.ASSIGN, line.Life_OUT, line.Next_OUT, false);
+
+            if (!regRight.equals(regAssign) || !regLeft.equals(("#0"))) {
+                m_writer.println(line.OP + " " + regAssign + ", " + regLeft + ", " + regRight);
+            }
 
             m_writer.println(CODE.get(i));
         }
@@ -260,6 +351,15 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         List<String> list = new ArrayList<String>(s);
         Collections.sort(list);
         return list;
+    }
+
+    public void setRegister(int i, String var) {
+        if (MODIFIED.contains(REGISTERS.get(i))) {
+            final String ans = "ST " + REGISTERS.get(i) + ", R" + i;
+            m_writer.println(ans);
+            MODIFIED.remove(REGISTERS.get(i));
+        }
+        REGISTERS.set(i, var);
     }
 
     // TODO: add any class you judge necessary, and explain them in the report. GOOD LUCK!

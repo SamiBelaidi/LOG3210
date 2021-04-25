@@ -87,12 +87,13 @@ public class BaseTest {
         // Assert
         catch (Exception ex) {
             // If we didn't expected this test to crash
-            if(!ex.getMessage().contains(m_expected))
-            {
-                fail(ex.getMessage());
-            }
+            throw(ex);
+//            if(!ex.getMessage().contains(m_expected))
+//            {
+//                fail(ex.getMessage());
+//            }
 
-            return;
+//            return;
         }
 
         String name = m_file.getName();
