@@ -287,39 +287,44 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         //          or
         //          put var in space of var which as the largest next-use
         if (REGISTERS.size() == REG) {
-            int largest = -1;
-            String chosenOne = "";
+            int largestRegValue = Integer.MIN_VALUE;
+            String largestReg = "";
 
-            for (String it : REGISTERS) {
-                // TODO: 1) UNUSED
-                if (!life.contains(it)) {
-                    final String ans = "R" + REGISTERS.indexOf(it);
+            for (String register : REGISTERS) {
+
+                if (!life.contains(register)) {
+
                     if (load_if_not_found) {
-                        m_writer.println("LD R" + REGISTERS.indexOf(it) + ", " + var);
+                        m_writer.println("LD R" + REGISTERS.indexOf(register) + ", " + var);
                     }
-                    REGISTERS.set(REGISTERS.indexOf(it), var);
-                    return ans;
+                    REGISTERS.set(REGISTERS.indexOf(register), var);
+                    return "R" + REGISTERS.indexOf(var);
                 }
-                if (next.nextuse.containsKey(it)) {
-                    if (next.nextuse.get(it).get(0) >= largest) {
-                        largest = next.nextuse.get(it).get(0);
-                        chosenOne = it;
+
+                if (next.nextuse.containsKey(register)) {
+
+                    if (next.nextuse.get(register).get(0) >= largestRegValue) {
+                        largestRegValue = next.nextuse.get(register).get(0);
+                        largestReg = register;
                     }
+
                 } else {
-                    final String ans = "R" + REGISTERS.indexOf(it);
-                    setRegister(REGISTERS.indexOf(it), var);
-                    if (load_if_not_found) {
-                        m_writer.println("LD R" + REGISTERS.indexOf(var) + ", " + var);
-                    }
-                    return ans;
+                    largestReg = register;
+                    break;
                 }
             }
-            final String ans = "R" + REGISTERS.indexOf(chosenOne);
-            setRegister(REGISTERS.indexOf(chosenOne), var);
-            if (load_if_not_found) {
-                m_writer.println("LD R" + REGISTERS.indexOf(var) + ", " + var);
+            if (MODIFIED.contains(largestReg)) {
+                m_writer.println("ST " + largestReg + ", R" + REGISTERS.indexOf(largestReg));
+                MODIFIED.remove(largestReg);
             }
-            return ans;
+
+            if (load_if_not_found) {
+                m_writer.println("LD R" + REGISTERS.indexOf(largestReg) + ", " + var);
+            }
+
+            REGISTERS.set(REGISTERS.indexOf(largestReg), var);
+
+            return "R" + REGISTERS.indexOf(var);
         }
         return null;
     }
@@ -337,12 +342,21 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
 
             String regAssign = choose_register(line.ASSIGN, line.Life_OUT, line.Next_OUT, false);
 
+            MODIFIED.add(line.ASSIGN);
+
             if (!regRight.equals(regAssign) || !regLeft.equals(("#0"))) {
                 m_writer.println(line.OP + " " + regAssign + ", " + regLeft + ", " + regRight);
             }
 
             m_writer.println(CODE.get(i));
         }
+
+        for (String register : REGISTERS) {
+            if (MODIFIED.contains(register) && RETURNED.contains(register)) {
+                m_writer.println("ST " + register + ", R" + REGISTERS.indexOf(register));
+            }
+        }
+
     }
 
 
@@ -353,14 +367,6 @@ public class PrintMachineCodeVisitor implements ParserVisitor {
         return list;
     }
 
-    public void setRegister(int i, String var) {
-        if (MODIFIED.contains(REGISTERS.get(i))) {
-            final String ans = "ST " + REGISTERS.get(i) + ", R" + i;
-            m_writer.println(ans);
-            MODIFIED.remove(REGISTERS.get(i));
-        }
-        REGISTERS.set(i, var);
-    }
 
     // TODO: add any class you judge necessary, and explain them in the report. GOOD LUCK!
 }
